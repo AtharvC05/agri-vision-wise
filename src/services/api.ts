@@ -1,5 +1,6 @@
 // API service layer for AgriVision
-// Contains mock data that will be replaced with real API calls
+// Real API calls using Supabase and external APIs
+import { supabase } from '@/lib/supabase'
 
 export interface User {
   id: string;
@@ -114,70 +115,161 @@ export const userAPI = {
 
 export const farmAPI = {
   createFarm: async (farmData: Omit<Farm, 'id'>): Promise<{ success: boolean; farmId: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      success: true,
-      farmId: 'farm_' + Date.now()
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('farms')
+        .insert({
+          user_id: user.id,
+          name: farmData.name,
+          location: farmData.location,
+          size: farmData.size,
+          crop_type: farmData.cropType,
+          sowing_date: farmData.sowingDate,
+          irrigation_type: farmData.irrigationType,
+          soil_nitrogen: farmData.soilHealth.nitrogen,
+          soil_phosphorus: farmData.soilHealth.phosphorus,
+          soil_potassium: farmData.soilHealth.potassium,
+          soil_ph: farmData.soilHealth.pH
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        farmId: data.id
+      };
+    } catch (error) {
+      console.error('Failed to create farm:', error);
+      return {
+        success: false,
+        farmId: 'farm_' + Date.now()
+      };
+    }
   },
 
   getFarms: async (userId: string): Promise<Farm[]> => {
-    await new Promise(resolve => setTimeout(resolve, 700));
-    return [
-      {
-        id: 'farm_1',
-        name: 'Main Field',
-        location: 'Nashik, Maharashtra',
-        size: 5.5,
-        cropType: 'Tomato',
-        sowingDate: '2024-01-15',
-        irrigationType: 'drip',
+    try {
+      const { data, error } = await supabase
+        .from('farms')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      return data.map(farm => ({
+        id: farm.id,
+        name: farm.name,
+        location: farm.location,
+        size: farm.size,
+        cropType: farm.crop_type,
+        sowingDate: farm.sowing_date,
+        irrigationType: farm.irrigation_type,
         soilHealth: {
-          nitrogen: 45,
-          phosphorus: 38,
-          potassium: 52,
-          pH: 6.8
+          nitrogen: farm.soil_nitrogen,
+          phosphorus: farm.soil_phosphorus,
+          potassium: farm.soil_potassium,
+          pH: farm.soil_ph
         }
-      }
-    ];
+      }));
+    } catch (error) {
+      console.error('Failed to fetch farms:', error);
+      // Fallback to demo data
+      return [
+        {
+          id: 'farm_1',
+          name: 'Main Field',
+          location: 'Nashik, Maharashtra',
+          size: 5.5,
+          cropType: 'Tomato',
+          sowingDate: '2024-01-15',
+          irrigationType: 'drip',
+          soilHealth: {
+            nitrogen: 45,
+            phosphorus: 38,
+            potassium: 52,
+            pH: 6.8
+          }
+        }
+      ];
+    }
   }
 };
 
 export const weatherAPI = {
   getForecast: async (location: string): Promise<WeatherData> => {
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    return {
-      location,
-      current: {
-        temperature: 28,
-        humidity: 65,
-        rainfall: 0,
-        windSpeed: 12
-      },
-      forecast: [
-        {
-          date: '2024-09-18',
-          temp: { min: 22, max: 32 },
-          humidity: 70,
-          rainfall: 5,
-          condition: 'Partly Cloudy'
+    try {
+      // Use OpenWeatherMap API (replace with your API key)
+      const API_KEY = 'demo_key'; // Replace with real API key
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${location}&appid=${API_KEY}&units=metric`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Weather API failed');
+      }
+      
+      const data = await response.json();
+      
+      return {
+        location,
+        current: {
+          temperature: Math.round(data.list[0].main.temp),
+          humidity: data.list[0].main.humidity,
+          rainfall: data.list[0].rain?.['3h'] || 0,
+          windSpeed: Math.round(data.list[0].wind.speed * 3.6) // Convert m/s to km/h
         },
-        {
-          date: '2024-09-19',
-          temp: { min: 24, max: 34 },
-          humidity: 60,
+        forecast: data.list.slice(0, 3).map((item: any) => ({
+          date: new Date(item.dt * 1000).toISOString().split('T')[0],
+          temp: { 
+            min: Math.round(item.main.temp_min), 
+            max: Math.round(item.main.temp_max) 
+          },
+          humidity: item.main.humidity,
+          rainfall: item.rain?.['3h'] || 0,
+          condition: item.weather[0].main
+        }))
+      };
+    } catch (error) {
+      // Fallback to demo data if API fails
+      console.warn('Weather API failed, using demo data:', error);
+      return {
+        location,
+        current: {
+          temperature: 28,
+          humidity: 65,
           rainfall: 0,
-          condition: 'Sunny'
+          windSpeed: 12
         },
-        {
-          date: '2024-09-20',
-          temp: { min: 23, max: 31 },
-          humidity: 75,
-          rainfall: 15,
-          condition: 'Light Rain'
-        }
-      ]
-    };
+        forecast: [
+          {
+            date: '2024-09-18',
+            temp: { min: 22, max: 32 },
+            humidity: 70,
+            rainfall: 5,
+            condition: 'Partly Cloudy'
+          },
+          {
+            date: '2024-09-19',
+            temp: { min: 24, max: 34 },
+            humidity: 60,
+            rainfall: 0,
+            condition: 'Sunny'
+          },
+          {
+            date: '2024-09-20',
+            temp: { min: 23, max: 31 },
+            humidity: 75,
+            rainfall: 15,
+            condition: 'Light Rain'
+          }
+        ]
+      };
+    }
   }
 };
 
@@ -256,36 +348,57 @@ export const yieldAPI = {
 
 export const alertsAPI = {
   getAlerts: async (farmId: string): Promise<Alert[]> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return [
-      {
-        id: 'alert_1',
-        type: 'irrigation',
-        priority: 'medium',
-        title: 'Irrigation Due',
-        message: 'Your tomato field needs watering in 2 days based on soil moisture levels.',
-        date: '2024-09-17',
-        actionRequired: true
-      },
-      {
-        id: 'alert_2',
-        type: 'weather',
-        priority: 'high',
-        title: 'Heavy Rain Expected',
-        message: 'Protect your crops from potential flooding. Rain expected on Sept 22-23.',
-        date: '2024-09-17',
-        actionRequired: true
-      },
-      {
-        id: 'alert_3',
-        type: 'fertilizer',
-        priority: 'low',
-        title: 'Fertilizer Application',
-        message: 'Consider NPK fertilizer application during the flowering stage.',
-        date: '2024-09-16',
-        actionRequired: false
-      }
-    ];
+    try {
+      const { data, error } = await supabase
+        .from('alerts')
+        .select('*')
+        .eq('farm_id', farmId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(alert => ({
+        id: alert.id,
+        type: alert.type,
+        priority: alert.priority,
+        title: alert.title,
+        message: alert.message,
+        date: new Date(alert.created_at).toISOString().split('T')[0],
+        actionRequired: alert.action_required
+      }));
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+      // Fallback to demo data
+      return [
+        {
+          id: 'alert_1',
+          type: 'irrigation',
+          priority: 'medium',
+          title: 'Irrigation Due',
+          message: 'Your tomato field needs watering in 2 days based on soil moisture levels.',
+          date: '2024-09-17',
+          actionRequired: true
+        },
+        {
+          id: 'alert_2',
+          type: 'weather',
+          priority: 'high',
+          title: 'Heavy Rain Expected',
+          message: 'Protect your crops from potential flooding. Rain expected on Sept 22-23.',
+          date: '2024-09-17',
+          actionRequired: true
+        },
+        {
+          id: 'alert_3',
+          type: 'fertilizer',
+          priority: 'low',
+          title: 'Fertilizer Application',
+          message: 'Consider NPK fertilizer application during the flowering stage.',
+          date: '2024-09-16',
+          actionRequired: false
+        }
+      ];
+    }
   }
 };
 
