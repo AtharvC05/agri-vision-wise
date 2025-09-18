@@ -1,6 +1,6 @@
 // API service layer for AgriVision
 // Real API calls using Supabase and external APIs
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 
 export interface User {
   id: string;
