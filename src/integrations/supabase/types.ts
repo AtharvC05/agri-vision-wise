@@ -14,7 +14,160 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          action_required: boolean
+          created_at: string
+          farm_id: string
+          id: string
+          message: string
+          priority: string
+          title: string
+          type: string
+        }
+        Insert: {
+          action_required?: boolean
+          created_at?: string
+          farm_id: string
+          id?: string
+          message: string
+          priority: string
+          title: string
+          type: string
+        }
+        Update: {
+          action_required?: boolean
+          created_at?: string
+          farm_id?: string
+          id?: string
+          message?: string
+          priority?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farms: {
+        Row: {
+          created_at: string
+          crop_type: string
+          id: string
+          irrigation_type: string
+          location: string
+          name: string
+          size: number
+          soil_nitrogen: number
+          soil_ph: number
+          soil_phosphorus: number
+          soil_potassium: number
+          sowing_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          crop_type: string
+          id?: string
+          irrigation_type: string
+          location: string
+          name: string
+          size: number
+          soil_nitrogen: number
+          soil_ph: number
+          soil_phosphorus: number
+          soil_potassium: number
+          sowing_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          crop_type?: string
+          id?: string
+          irrigation_type?: string
+          location?: string
+          name?: string
+          size?: number
+          soil_nitrogen?: number
+          soil_ph?: number
+          soil_phosphorus?: number
+          soil_potassium?: number
+          sowing_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          actual_yield: number
+          comments: string
+          created_at: string
+          farm_id: string
+          id: string
+          issues: string[]
+          rating: number
+        }
+        Insert: {
+          actual_yield: number
+          comments: string
+          created_at?: string
+          farm_id: string
+          id?: string
+          issues?: string[]
+          rating: number
+        }
+        Update: {
+          actual_yield?: number
+          comments?: string
+          created_at?: string
+          farm_id?: string
+          id?: string
+          issues?: string[]
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          id: string
+          language: string
+          location: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language: string
+          location: string
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string
+          location?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
