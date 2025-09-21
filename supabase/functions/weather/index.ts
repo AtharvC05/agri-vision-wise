@@ -26,6 +26,9 @@ serve(async (req) => {
     }
 
     const apiKey = Deno.env.get('OPENWEATHER_API_KEY');
+    console.log('API Key status:', apiKey ? 'Found' : 'Not found');
+    console.log('API Key first 10 chars:', apiKey ? apiKey.substring(0, 10) + '...' : 'None');
+    
     if (!apiKey) {
       console.error('OPENWEATHER_API_KEY not found in environment');
       return new Response(
