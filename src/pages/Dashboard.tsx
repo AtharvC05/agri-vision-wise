@@ -17,7 +17,7 @@ import {
   CloudRain
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { weatherAPI, alertsAPI, yieldAPI, type Alert, type WeatherData, type YieldPrediction } from '@/services/api';
+import { getForecast, alertsAPI, yieldAPI, type Alert, type WeatherData, type YieldPrediction } from '@/services/api';
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -30,7 +30,7 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
       try {
         const [weatherData, alertsData, yieldPrediction] = await Promise.all([
-          weatherAPI.getForecast('Nashik, Maharashtra'),
+          getForecast('Nashik, Maharashtra'),
           alertsAPI.getAlerts('farm_1'),
           yieldAPI.predictYield('farm_1')
         ]);
@@ -144,9 +144,9 @@ const Dashboard = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Wind Speed</p>
+                        <p className="text-sm text-muted-foreground">Description</p>
                         <p className="text-lg font-semibold text-foreground">
-                          {weather.current.windSpeed} km/h
+                          {weather.current.description}
                         </p>
                       </div>
                     </div>
@@ -158,10 +158,10 @@ const Dashboard = () => {
                             {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
                           </p>
                           <p className="text-sm font-medium text-foreground">
-                            {day.temp.max}°/{day.temp.min}°
+                            {day.temperature}°C
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {day.condition}
+                            {day.description}
                           </p>
                           {day.rainfall > 0 && (
                             <p className="text-xs text-primary mt-1">

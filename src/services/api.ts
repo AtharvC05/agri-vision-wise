@@ -31,15 +31,16 @@ export interface WeatherData {
   current: {
     temperature: number;
     humidity: number;
+    description: string;
+    icon: string;
     rainfall: number;
-    windSpeed: number;
   };
   forecast: Array<{
     date: string;
-    temp: { min: number; max: number };
-    humidity: number;
+    temperature: number;
+    description: string;
+    icon: string;
     rainfall: number;
-    condition: string;
   }>;
 }
 
@@ -168,7 +169,7 @@ export const farmAPI = {
         size: farm.size,
         cropType: farm.crop_type,
         sowingDate: farm.sowing_date,
-        irrigationType: farm.irrigation_type,
+        irrigationType: farm.irrigation_type as 'drip' | 'sprinkler' | 'flood' | 'manual',
         soilHealth: {
           nitrogen: farm.soil_nitrogen,
           phosphorus: farm.soil_phosphorus,
@@ -200,76 +201,79 @@ export const farmAPI = {
   }
 };
 
-export const weatherAPI = {
-  getForecast: async (location: string): Promise<WeatherData> => {
-    try {
-      // Use OpenWeatherMap API (replace with your API key)
-      const API_KEY = 'demo_key'; // Replace with real API key
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${location}&appid=${API_KEY}&units=metric`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Weather API failed');
-      }
-      
-      const data = await response.json();
-      
-      return {
-        location,
-        current: {
-          temperature: Math.round(data.list[0].main.temp),
-          humidity: data.list[0].main.humidity,
-          rainfall: data.list[0].rain?.['3h'] || 0,
-          windSpeed: Math.round(data.list[0].wind.speed * 3.6) // Convert m/s to km/h
-        },
-        forecast: data.list.slice(0, 3).map((item: any) => ({
-          date: new Date(item.dt * 1000).toISOString().split('T')[0],
-          temp: { 
-            min: Math.round(item.main.temp_min), 
-            max: Math.round(item.main.temp_max) 
-          },
-          humidity: item.main.humidity,
-          rainfall: item.rain?.['3h'] || 0,
-          condition: item.weather[0].main
-        }))
-      };
-    } catch (error) {
-      // Fallback to demo data if API fails
-      console.warn('Weather API failed, using demo data:', error);
-      return {
-        location,
-        current: {
-          temperature: 28,
-          humidity: 65,
-          rainfall: 0,
-          windSpeed: 12
-        },
-        forecast: [
-          {
-            date: '2024-09-18',
-            temp: { min: 22, max: 32 },
-            humidity: 70,
-            rainfall: 5,
-            condition: 'Partly Cloudy'
-          },
-          {
-            date: '2024-09-19',
-            temp: { min: 24, max: 34 },
-            humidity: 60,
-            rainfall: 0,
-            condition: 'Sunny'
-          },
-          {
-            date: '2024-09-20',
-            temp: { min: 23, max: 31 },
-            humidity: 75,
-            rainfall: 15,
-            condition: 'Light Rain'
-          }
-        ]
-      };
+export const getForecast = async (location: string): Promise<WeatherData> => {
+  try {
+    const url = new URL('https://qvyuchjyeszrrmcsdren.supabase.co/functions/v1/weather');
+    url.searchParams.set('location', location);
+    
+    const response = await fetch(url.toString());
+    
+    if (!response.ok) {
+      throw new Error(`Weather API failed: ${response.statusText}`);
     }
+
+    const data = await response.json();
+    
+    return {
+      location: data.city.name,
+      current: {
+        temperature: Math.round(data.list[0].main.temp),
+        humidity: data.list[0].main.humidity,
+        description: data.list[0].weather[0].description,
+        icon: data.list[0].weather[0].icon,
+        rainfall: data.list[0].rain ? data.list[0].rain['3h'] || 0 : 0,
+      },
+      forecast: data.list.slice(1, 6).map((item: any) => ({
+        date: new Date(item.dt * 1000).toLocaleDateString(),
+        temperature: Math.round(item.main.temp),
+        description: item.weather[0].description,
+        icon: item.weather[0].icon,
+        rainfall: item.rain ? item.rain['3h'] || 0 : 0,
+      })),
+    };
+  } catch (error) {
+    console.error('Weather API failed, using demo data:', error);
+    // Fallback to demo data
+    return {
+      location,
+      current: {
+        temperature: 28,
+        humidity: 65,
+        description: 'Partly cloudy',
+        icon: '02d',
+        rainfall: 0,
+      },
+      forecast: [
+        {
+          date: new Date(Date.now() + 86400000).toLocaleDateString(),
+          temperature: 30,
+          description: 'Sunny',
+          icon: '01d',
+          rainfall: 0,
+        },
+        {
+          date: new Date(Date.now() + 172800000).toLocaleDateString(),
+          temperature: 26,
+          description: 'Light rain',
+          icon: '10d',
+          rainfall: 2.5,
+        },
+        {
+          date: new Date(Date.now() + 259200000).toLocaleDateString(),
+          temperature: 29,
+          description: 'Partly cloudy',
+          icon: '02d',
+          rainfall: 0,
+        },
+        {
+          date: new Date(Date.now() + 345600000).toLocaleDateString(),
+          temperature: 31,
+          description: 'Sunny',
+          icon: '01d',
+          rainfall: 0,
+        },
+      ],
+    };
   }
 };
 
@@ -359,8 +363,8 @@ export const alertsAPI = {
 
       return data.map(alert => ({
         id: alert.id,
-        type: alert.type,
-        priority: alert.priority,
+        type: alert.type as 'irrigation' | 'fertilizer' | 'pest' | 'weather',
+        priority: alert.priority as 'low' | 'medium' | 'high',
         title: alert.title,
         message: alert.message,
         date: new Date(alert.created_at).toISOString().split('T')[0],
