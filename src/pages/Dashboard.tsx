@@ -29,14 +29,13 @@ const Dashboard = () => {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [weatherData, alertsData, yieldPrediction] = await Promise.all([
+        const [weatherData, yieldPrediction] = await Promise.all([
           getForecast('Nashik, Maharashtra'),
-          alertsAPI.getAlerts('farm_1'),
           yieldAPI.predictYield('farm_1')
         ]);
         
         setWeather(weatherData);
-        setAlerts(alertsData.slice(0, 3)); // Show only top 3 alerts
+        setAlerts([]); // No alerts until user has farms
         setYieldData(yieldPrediction);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
