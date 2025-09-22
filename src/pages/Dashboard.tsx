@@ -33,7 +33,7 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
       try {
         const [weatherData, yieldPrediction] = await Promise.all([
-          getForecast('Nashik, Maharashtra'),
+          getForecast('Hinjewadi, Pune, Maharashtra'),
           yieldAPI.predictYield('farm_1')
         ]);
         
@@ -191,11 +191,11 @@ const Dashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-5 gap-3">
                       {weather.forecast.map((day, index) => (
                         <div key={index} className="text-center p-3 bg-accent/10 rounded-lg">
                           <p className="text-xs text-muted-foreground mb-1">
-                            {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
+                            {day.date}
                           </p>
                           <p className="text-sm font-medium text-foreground">
                             {day.temperature}°C
