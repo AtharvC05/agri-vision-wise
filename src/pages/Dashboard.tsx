@@ -170,11 +170,25 @@ const Dashboard = () => {
               <CardContent>
                 {weather && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-accent/20 rounded-lg">
-                      <h3 className="font-semibold mb-2">5-Day Forecast</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Weather outlook for agricultural planning
-                      </p>
+                    <div className="flex items-center justify-between p-4 bg-accent/20 rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Today</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {weather.current.temperature}°C
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Humidity: {weather.current.humidity}% | Wind: {weather.current.windSpeed} km/h
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Description</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {weather.current.description}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          ET: {weather.current.evapotranspiration} mm/day | UV: {weather.current.uvIndex}
+                        </p>
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-5 gap-3">

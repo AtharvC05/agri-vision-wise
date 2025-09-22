@@ -235,7 +235,7 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
         evapotranspiration: Math.round(data.list[0].main.temp * 0.15 * 10) / 10, // Simple ET calculation
       },
       forecast: data.list.slice(1, 6).map((item: any) => ({
-        date: new Date(item.dt * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        date: new Date(item.dt * 1000).toLocaleDateString(),
         temperature: Math.round(item.main.temp),
         description: item.weather[0].description,
         icon: item.weather[0].icon,
@@ -263,7 +263,7 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
       },
       forecast: [
         {
-          date: new Date(Date.now() + 86400000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          date: new Date(Date.now() + 86400000).toLocaleDateString(),
           temperature: 30,
           description: 'Sunny',
           icon: '01d',
@@ -273,7 +273,7 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           pressure: 1015,
         },
         {
-          date: new Date(Date.now() + 172800000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          date: new Date(Date.now() + 172800000).toLocaleDateString(),
           temperature: 26,
           description: 'Light rain',
           icon: '10d',
@@ -283,7 +283,7 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           pressure: 1008,
         },
         {
-          date: new Date(Date.now() + 259200000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          date: new Date(Date.now() + 259200000).toLocaleDateString(),
           temperature: 29,
           description: 'Partly cloudy',
           icon: '02d',
@@ -293,7 +293,7 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           pressure: 1011,
         },
         {
-          date: new Date(Date.now() + 345600000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          date: new Date(Date.now() + 345600000).toLocaleDateString(),
           temperature: 31,
           description: 'Sunny',
           icon: '01d',
