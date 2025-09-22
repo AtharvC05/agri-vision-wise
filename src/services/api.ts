@@ -34,6 +34,10 @@ export interface WeatherData {
     description: string;
     icon: string;
     rainfall: number;
+    windSpeed: number;
+    pressure: number;
+    uvIndex: number;
+    evapotranspiration: number;
   };
   forecast: Array<{
     date: string;
@@ -41,6 +45,9 @@ export interface WeatherData {
     description: string;
     icon: string;
     rainfall: number;
+    humidity: number;
+    windSpeed: number;
+    pressure: number;
   }>;
 }
 
@@ -222,6 +229,10 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
         description: data.list[0].weather[0].description,
         icon: data.list[0].weather[0].icon,
         rainfall: data.list[0].rain ? data.list[0].rain['3h'] || 0 : 0,
+        windSpeed: Math.round(data.list[0].wind.speed * 3.6), // Convert m/s to km/h
+        pressure: data.list[0].main.pressure,
+        uvIndex: 7, // OpenWeather doesn't provide UV in 5-day forecast
+        evapotranspiration: Math.round(data.list[0].main.temp * 0.15 * 10) / 10, // Simple ET calculation
       },
       forecast: data.list.slice(1, 6).map((item: any) => ({
         date: new Date(item.dt * 1000).toLocaleDateString(),
@@ -229,11 +240,14 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
         description: item.weather[0].description,
         icon: item.weather[0].icon,
         rainfall: item.rain ? item.rain['3h'] || 0 : 0,
+        humidity: item.main.humidity,
+        windSpeed: Math.round(item.wind.speed * 3.6),
+        pressure: item.main.pressure,
       })),
     };
   } catch (error) {
     console.error('Weather API failed, using demo data:', error);
-    // Fallback to demo data
+    // Fallback to agricultural demo data
     return {
       location,
       current: {
@@ -242,6 +256,10 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
         description: 'Partly cloudy',
         icon: '02d',
         rainfall: 0,
+        windSpeed: 12,
+        pressure: 1013,
+        uvIndex: 7,
+        evapotranspiration: 4.2,
       },
       forecast: [
         {
@@ -250,6 +268,9 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           description: 'Sunny',
           icon: '01d',
           rainfall: 0,
+          humidity: 58,
+          windSpeed: 15,
+          pressure: 1015,
         },
         {
           date: new Date(Date.now() + 172800000).toLocaleDateString(),
@@ -257,6 +278,9 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           description: 'Light rain',
           icon: '10d',
           rainfall: 2.5,
+          humidity: 85,
+          windSpeed: 8,
+          pressure: 1008,
         },
         {
           date: new Date(Date.now() + 259200000).toLocaleDateString(),
@@ -264,6 +288,9 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           description: 'Partly cloudy',
           icon: '02d',
           rainfall: 0,
+          humidity: 72,
+          windSpeed: 10,
+          pressure: 1011,
         },
         {
           date: new Date(Date.now() + 345600000).toLocaleDateString(),
@@ -271,6 +298,9 @@ export const getForecast = async (location: string): Promise<WeatherData> => {
           description: 'Sunny',
           icon: '01d',
           rainfall: 0,
+          humidity: 55,
+          windSpeed: 18,
+          pressure: 1016,
         },
       ],
     };

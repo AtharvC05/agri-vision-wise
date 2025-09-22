@@ -63,8 +63,37 @@ serve(async (req) => {
     const weatherData = await weatherResponse.json();
     console.log('Weather data fetched successfully');
 
+    // Transform OpenWeather data for agricultural use
+    const transformedData = {
+      current: {
+        temperature: `${Math.round(weatherData.list[0].main.temp)}°C`,
+        humidity: `${weatherData.list[0].main.humidity}%`,
+        condition: weatherData.list[0].weather[0].description,
+        rainfall: `${weatherData.list[0].rain?.['3h'] || 0} mm`,
+        windSpeed: `${Math.round(weatherData.list[0].wind.speed * 3.6)} km/h`,
+        et: `${(weatherData.list[0].main.temp * 0.15).toFixed(1)} mm/day`, // Simple ET calculation
+        pressure: `${weatherData.list[0].main.pressure} hPa`,
+        uvIndex: "7" // OpenWeather doesn't provide UV in 5-day forecast
+      },
+      forecast: weatherData.list.slice(0, 40).filter((_, index) => index % 8 === 0).slice(0, 5).map((item: any, index: number) => {
+        const date = new Date(item.dt * 1000);
+        const dateStr = index === 0 ? "Today" : index === 1 ? "Tomorrow" : `Day ${index + 1}`;
+        
+        return {
+          date: dateStr,
+          highTemp: Math.round(item.main.temp_max),
+          lowTemp: Math.round(item.main.temp_min),
+          condition: item.weather[0].description,
+          humidity: `${item.main.humidity}%`,
+          rainfall: `${item.rain?.['3h'] || 0} mm`,
+          windSpeed: `${Math.round(item.wind.speed * 3.6)} km/h`,
+          pressure: `${item.main.pressure} hPa`
+        };
+      })
+    };
+
     return new Response(
-      JSON.stringify(weatherData),
+      JSON.stringify(transformedData),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
